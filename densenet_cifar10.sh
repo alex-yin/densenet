@@ -7,7 +7,7 @@ export CUDA_VISIBLE_DEVICES=0
 
 
 python3 run_cifar10.py \
-    --batch_size=32 \
+    --batch_size=64 \
     --nb_epoch=40 \
     --depth=40 \
     --nb_dense_block=3 \
@@ -17,7 +17,7 @@ python3 run_cifar10.py \
 
 
 python3 run_cifar10.py \
-    --batch_size=32 \
+    --batch_size=64 \
     --nb_epoch=40 \
     --depth=100 \
     --nb_dense_block=3 \
@@ -27,7 +27,7 @@ python3 run_cifar10.py \
 
 
 python3 run_cifar10.py \
-    --batch_size=32 \
+    --batch_size=64 \
     --nb_epoch=40 \
     --depth=100 \
     --nb_dense_block=3 \
