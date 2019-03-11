@@ -5,13 +5,13 @@ import time
 import json
 import argparse
 import densenet
+import scipy.io as sio
 import numpy as np
 import keras.backend as K
 
-from keras.datasets import cifar10
+# from keras.datasets import cifar10
 from keras.optimizers import Adam
 from keras.utils import np_utils
-from keras.preprocessing.image import ImageDataGenerator
 
 def sample_latency_ANN(ann, batch_shape, repeat):
     samples = []
@@ -29,7 +29,7 @@ def sample_latency_ANN(ann, batch_shape, repeat):
     std_dev_per_frame = np.std(per_frame_latency)
     return(avg_latency_per_frame, std_dev_per_frame)
 
-def run_cifar10(batch_size,
+def run_svhn(batch_size,
                 nb_epoch,
                 depth,
                 nb_dense_block,
@@ -58,9 +58,18 @@ def run_cifar10(batch_size,
     ###################
     # Data processing #
     ###################
+    train_mat = sio.loadmat('/home/zixuan/workspace/Dataset/svhn/train_32x32.mat')
+    X_train = np.float32(np.array(train_mat['X']) * 1/255)
+    X_train = X_train.transpose((3,0,1,2))
+    y_train = np.array(mat['y']).ravel()
 
-    # the data, shuffled and split between train and test sets
-    (X_train, y_train), (X_test, y_test) = cifar10.load_data()
+    test_mat = sio.loadmat('/home/zixuan/workspace/Dataset/svhn/test_32x32.mat')
+    X_test = np.float32(np.array(test_mat['X']) * 1/255)
+    X_test = X_test.transpose((3,0,1,2))
+    y_test = np.array(mat['y']).ravel()
+
+    nb_classes = len(np.unique(y_train))
+    img_dim = X_train.shape[1:]
 
     nb_classes = len(np.unique(y_train))
     img_dim = X_train.shape[1:]
@@ -140,8 +149,6 @@ def run_cifar10(batch_size,
     list_test_loss = []
     list_learning_rate = []
 
-    datagen = ImageDataGenerator()
-
     for e in range(nb_epoch):
 
         if e == int(0.5 * nb_epoch):
@@ -150,15 +157,25 @@ def run_cifar10(batch_size,
         if e == int(0.75 * nb_epoch):
             K.set_value(model.optimizer.lr, np.float32(learning_rate / 100.))
 
+        split_size = batch_size
+        num_splits = X_train.shape[0] / split_size
+        arr_splits = np.array_split(np.arange(X_train.shape[0]), num_splits)
+
         l_train_loss = []
         start = time.time()
 
-        model.fit_generator(datagen.flow(X_train, Y_train, batch_size), epochs=1)
+        for batch_idx in arr_splits:
+
+            X_batch, Y_batch = X_train[batch_idx], Y_train[batch_idx]
+            train_logloss, train_acc = model.train_on_batch(X_batch, Y_batch)
+
+            l_train_loss.append([train_logloss, train_acc])
 
         test_logloss, test_acc = model.evaluate(X_test,
                                                 Y_test,
                                                 verbose=1,
                                                 batch_size=64)
+        list_train_loss.append(np.mean(np.array(l_train_loss), 0).tolist())
         list_test_loss.append([test_logloss, test_acc])
         list_learning_rate.append(float(K.get_value(model.optimizer.lr)))
         # to convert numpy array to json serializable
@@ -169,7 +186,7 @@ def run_cifar10(batch_size,
         d_log["nb_epoch"] = nb_epoch
         d_log["latency"] = model_latency
         d_log["optimizer"] = opt.get_config()
-        # d_log["train_loss"] = list_train_loss
+        d_log["train_loss"] = list_train_loss
         d_log["test_loss"] = list_test_loss
         d_log["learning_rate"] = list_learning_rate
 
@@ -215,7 +232,7 @@ if __name__ == '__main__':
         if not os.path.exists(d):
             os.makedirs(d)
 
-    run_cifar10(args.batch_size,
+    run_svhn(args.batch_size,
                 args.nb_epoch,
                 args.depth,
                 args.nb_dense_block,
