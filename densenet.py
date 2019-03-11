@@ -145,7 +145,7 @@ def DenseNet(nb_classes, img_dim, depth, nb_dense_block, growth_rate,
     :rtype: keras model
 
     """
-    
+
     if K.image_dim_ordering() == "th":
         concat_axis = 1
     elif K.image_dim_ordering() == "tf":
@@ -169,16 +169,16 @@ def DenseNet(nb_classes, img_dim, depth, nb_dense_block, growth_rate,
     # Add dense blocks
     for block_idx in range(nb_dense_block - 1):
         x, nb_filter = denseblock(x, concat_axis, nb_layers,
-                                  nb_filter, growth_rate, 
+                                  nb_filter, growth_rate,
                                   dropout_rate=dropout_rate,
                                   weight_decay=weight_decay)
         # add transition
-        x = transition(x, nb_filter, dropout_rate=dropout_rate,
+        x = transition(x, concat_axis, nb_filter, dropout_rate=dropout_rate,
                        weight_decay=weight_decay)
 
     # The last denseblock does not have a transition
     x, nb_filter = denseblock(x, concat_axis, nb_layers,
-                              nb_filter, growth_rate, 
+                              nb_filter, growth_rate,
                               dropout_rate=dropout_rate,
                               weight_decay=weight_decay)
 

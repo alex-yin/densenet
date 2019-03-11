@@ -12,6 +12,21 @@ from keras.datasets import cifar10
 from keras.optimizers import Adam
 from keras.utils import np_utils
 
+def sample_latency_ANN(ann, batch_shape, repeat):
+    samples = []
+
+    # drop first run
+    ann.predict(np.random.random(batch_shape), batch_size=batch_shape[0])
+
+    for i in range(repeat):
+        data_in = np.random.random(batch_shape)
+        start_time = time.time()
+        ann.predict(data_in, batch_size=batch_shape[0])
+        samples.append(time.time() - start_time)
+    per_frame_latency = np.array(samples) / batch_shape[0]
+    avg_latency_per_frame = np.average(per_frame_latency)
+    std_dev_per_frame = np.std(per_frame_latency)
+    return(avg_latency_per_frame, std_dev_per_frame)
 
 def run_cifar10(batch_size,
                 nb_epoch,
@@ -22,6 +37,7 @@ def run_cifar10(batch_size,
                 dropout_rate,
                 learning_rate,
                 weight_decay,
+                logfile,
                 plot_architecture):
     """ Run CIFAR10 experiments
 
@@ -104,6 +120,16 @@ def run_cifar10(batch_size,
         plot(model, to_file='./figures/densenet_archi.png', show_shapes=True)
 
     ####################
+    # Network profiling#
+    ####################
+    batch_shape = (32, 32, 32, 3)
+    repeat = 25
+
+    model_latency, model_CI = sample_latency_ANN(model, batch_shape, repeat)
+    print(model_latency)
+
+
+    ####################
     # Network training #
     ####################
 
@@ -137,7 +163,7 @@ def run_cifar10(batch_size,
 
         test_logloss, test_acc = model.evaluate(X_test,
                                                 Y_test,
-                                                verbose=0,
+                                                verbose=1,
                                                 batch_size=64)
         list_train_loss.append(np.mean(np.array(l_train_loss), 0).tolist())
         list_test_loss.append([test_logloss, test_acc])
@@ -148,12 +174,13 @@ def run_cifar10(batch_size,
         d_log = {}
         d_log["batch_size"] = batch_size
         d_log["nb_epoch"] = nb_epoch
+        d_log["latency"] = model_latency
         d_log["optimizer"] = opt.get_config()
         d_log["train_loss"] = list_train_loss
         d_log["test_loss"] = list_test_loss
         d_log["learning_rate"] = list_learning_rate
 
-        json_file = os.path.join('./log/experiment_log_cifar10.json')
+        json_file = os.path.join('./log', logfile)
         with open(json_file, 'w') as fp:
             json.dump(d_log, fp, indent=4, sort_keys=True)
 
@@ -179,6 +206,8 @@ if __name__ == '__main__':
                         help='Learning rate')
     parser.add_argument('--weight_decay', type=float, default=1E-4,
                         help='L2 regularization on weights')
+    parser.add_argument('--logfile', type=str, default='experiment_log_cifar10.json',
+                        help='logfile name')
     parser.add_argument('--plot_architecture', type=bool, default=False,
                         help='Save a plot of the network architecture')
 
@@ -202,4 +231,5 @@ if __name__ == '__main__':
                 args.dropout_rate,
                 args.learning_rate,
                 args.weight_decay,
+                args.logfile,
                 args.plot_architecture)
