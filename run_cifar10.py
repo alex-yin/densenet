@@ -9,7 +9,7 @@ import numpy as np
 import keras.backend as K
 
 from keras.datasets import cifar10
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.utils import np_utils
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -110,7 +110,8 @@ def run_cifar10(batch_size,
     model.summary()
 
     # Build optimizer
-    opt = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+    # opt = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+    opt = SGD(lr=learning_rate, momentum=0.9, nesterov=True)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
