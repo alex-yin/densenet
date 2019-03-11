@@ -157,25 +157,15 @@ def run_svhn(batch_size,
         if e == int(0.75 * nb_epoch):
             K.set_value(model.optimizer.lr, np.float32(learning_rate / 100.))
 
-        split_size = batch_size
-        num_splits = X_train.shape[0] / split_size
-        arr_splits = np.array_split(np.arange(X_train.shape[0]), num_splits)
-
         l_train_loss = []
         start = time.time()
 
-        for batch_idx in arr_splits:
-
-            X_batch, Y_batch = X_train[batch_idx], Y_train[batch_idx]
-            train_logloss, train_acc = model.train_on_batch(X_batch, Y_batch)
-
-            l_train_loss.append([train_logloss, train_acc])
+        model.fit_generator(datagen.flow(X_train, Y_train, batch_size), epochs=1)
 
         test_logloss, test_acc = model.evaluate(X_test,
                                                 Y_test,
                                                 verbose=1,
                                                 batch_size=64)
-        list_train_loss.append(np.mean(np.array(l_train_loss), 0).tolist())
         list_test_loss.append([test_logloss, test_acc])
         list_learning_rate.append(float(K.get_value(model.optimizer.lr)))
         # to convert numpy array to json serializable
@@ -186,7 +176,7 @@ def run_svhn(batch_size,
         d_log["nb_epoch"] = nb_epoch
         d_log["latency"] = model_latency
         d_log["optimizer"] = opt.get_config()
-        d_log["train_loss"] = list_train_loss
+        # d_log["train_loss"] = list_train_loss
         d_log["test_loss"] = list_test_loss
         d_log["learning_rate"] = list_learning_rate
 
