@@ -9,9 +9,9 @@ import scipy.io as sio
 import numpy as np
 import keras.backend as K
 
-# from keras.datasets import cifar10
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.utils import np_utils
+from keras.preprocessing.image import ImageDataGenerator
 
 def sample_latency_ANN(ann, batch_shape, repeat):
     samples = []
@@ -40,7 +40,7 @@ def run_svhn(batch_size,
                 weight_decay,
                 logfile,
                 plot_architecture):
-    """ Run CIFAR10 experiments
+    """ Run SVHN experiments
 
     :param batch_size: int -- batch size
     :param nb_epoch: int -- number of training epochs
@@ -119,7 +119,8 @@ def run_svhn(batch_size,
     model.summary()
 
     # Build optimizer
-    opt = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+    # opt = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+    opt = SGD(lr=learning_rate, momentum=0.9, nesterov=True)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
@@ -187,7 +188,7 @@ def run_svhn(batch_size,
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Run CIFAR10 experiment')
+    parser = argparse.ArgumentParser(description='Run SVHN experiment')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Batch size')
     parser.add_argument('--nb_epoch', default=30, type=int,
