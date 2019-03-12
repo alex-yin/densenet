@@ -121,15 +121,6 @@ def run_cifar10(batch_size,
         from keras.utils.visualize_util import plot
         plot(model, to_file='./figures/densenet_archi.png', show_shapes=True)
 
-    ####################
-    # Network profiling#
-    ####################
-    batch_shape = (32, 32, 32, 3)
-    repeat = 25
-
-    model_latency, model_CI = sample_latency_ANN(model, batch_shape, repeat)
-    print(model_latency)
-
 
     ####################
     # Network training #
@@ -168,7 +159,6 @@ def run_cifar10(batch_size,
         d_log = {}
         d_log["batch_size"] = batch_size
         d_log["nb_epoch"] = nb_epoch
-        d_log["latency"] = model_latency
         d_log["optimizer"] = opt.get_config()
         # d_log["train_loss"] = list_train_loss
         d_log["test_loss"] = list_test_loss

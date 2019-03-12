@@ -12,6 +12,7 @@ from keras.optimizers import Adam, SGD
 from keras.utils import np_utils
 from keras.preprocessing.image import ImageDataGenerator
 
+DATASET_DIR = '/home/zixuan/mobilenets/gtsrb_tfr/gtsrb/'
 
 def sample_latency_ANN(ann, batch_shape, repeat):
     samples = []
@@ -58,21 +59,24 @@ def run_gtsrb(batch_size,
     ###################
     # Data processing #
     ###################
+    tr_x = np.load(os.path.join(DATASET_DIR, 'gtsrb_train_in_32.npy'))
+    tr_y = np.load(os.path.join(DATASET_DIR, 'gtsrb_train_out_32.npy'))
+    te_x = np.load(os.path.join(DATASET_DIR, 'gtsrb_test_in_32.npy'))
+    te_y = np.load(os.path.join(DATASET_DIR, 'gtsrb_test_out_32.npy'))
+    va_x = np.load(os.path.join(DATASET_DIR, 'gtsrb_val_in_32.npy'))
+    va_y = np.load(os.path.join(DATASET_DIR, 'gtsrb_val_out_32.npy'))
+    X_train = np.vstack((tr_x, va_x))
+    Y_train = np.vstack((tr_y, va_y))
+    X_test = te_x
+    Y_test = te_y
 
-    # the data, shuffled and split between train and test sets
-    (X_train, y_train), (X_test, y_test) = cifar10.load_data()
-
-    nb_classes = len(np.unique(y_train))
+    nb_classes = Y_train.shape[1]
     img_dim = X_train.shape[1:]
 
     if K.image_data_format() == "channels_first":
         n_channels = X_train.shape[1]
     else:
         n_channels = X_train.shape[-1]
-
-    # convert class vectors to binary class matrices
-    Y_train = np_utils.to_categorical(y_train, nb_classes)
-    Y_test = np_utils.to_categorical(y_test, nb_classes)
 
     X_train = X_train.astype('float32')
     X_test = X_test.astype('float32')
@@ -121,15 +125,6 @@ def run_gtsrb(batch_size,
         from keras.utils.visualize_util import plot
         plot(model, to_file='./figures/densenet_archi.png', show_shapes=True)
 
-    ####################
-    # Network profiling#
-    ####################
-    batch_shape = (32, 32, 32, 3)
-    repeat = 25
-
-    model_latency, model_CI = sample_latency_ANN(model, batch_shape, repeat)
-    print(model_latency)
-
 
     ####################
     # Network training #
@@ -166,7 +161,6 @@ def run_gtsrb(batch_size,
         d_log = {}
         d_log["batch_size"] = batch_size
         d_log["nb_epoch"] = nb_epoch
-        d_log["latency"] = model_latency
         d_log["optimizer"] = opt.get_config()
         # d_log["train_loss"] = list_train_loss
         d_log["test_loss"] = list_test_loss
