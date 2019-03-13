@@ -58,15 +58,15 @@ def run_svhn(batch_size,
     ###################
     # Data processing #
     ###################
-    train_mat = sio.loadmat('/home/zixuan/workspace/Dataset/svhn/train_32x32.mat')
+    train_mat = sio.loadmat('/home/zixuan/mobilenets/svhn_new/train_32x32.mat')
     X_train = np.float32(np.array(train_mat['X']) * 1/255)
     X_train = X_train.transpose((3,0,1,2))
-    y_train = np.array(mat['y']).ravel()
+    y_train = np.array(train_mat['y']).ravel() - 1
 
-    test_mat = sio.loadmat('/home/zixuan/workspace/Dataset/svhn/test_32x32.mat')
+    test_mat = sio.loadmat('/home/zixuan/mobilenets/svhn_new/test_32x32.mat')
     X_test = np.float32(np.array(test_mat['X']) * 1/255)
     X_test = X_test.transpose((3,0,1,2))
-    y_test = np.array(mat['y']).ravel()
+    y_test = np.array(test_mat['y']).ravel() - 1
 
     nb_classes = len(np.unique(y_train))
     img_dim = X_train.shape[1:]
@@ -140,6 +140,8 @@ def run_svhn(batch_size,
     list_train_loss = []
     list_test_loss = []
     list_learning_rate = []
+
+    datagen = ImageDataGenerator()
 
     for e in range(nb_epoch):
 

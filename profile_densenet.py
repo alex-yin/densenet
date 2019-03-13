@@ -102,7 +102,7 @@ def profile_densenet(nb_classes,
     d_log["growth_rate"] = growth_rate
     d_log["nb_filter"] = nb_filter
 
-    logfile = 'densenet_B{}_L{}_k{}.json'.format(nb_dense_block, depth, growth_rate)
+    # logfile = 'densenet_B{}_L{}_k{}.json'.format(nb_dense_block, depth, growth_rate)
     json_file = os.path.join('./log', logfile)
     with open(json_file, 'w') as fp:
         json.dump(d_log, fp, indent=4, sort_keys=True)
